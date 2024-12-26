@@ -36,22 +36,53 @@ function speechToText() {
     recordBtn.querySelector("p").innerHTML = "Listening...";
     recognition.start();
     recognition.onresult = (event) => {
-      const speechResult = event.results[0][0].transcript;
-      //detect when intrim results
-      if (event.results[0].isFinal) {
-        result.innerHTML += " " + speechResult;
-        result.querySelector("p").remove();
-      } else {
-        //creative p with class interim if not already there
-        if (!document.querySelector(".interim")) {
-          const interim = document.createElement("p");
-          interim.classList.add("interim");
-          result.appendChild(interim);
+      console.log("Got result:", event.results); // Debug log
+      restartCount = 0;
+
+      // Loop through all the results
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+
+        if (event.results[i].isFinal) {
+          console.log("Final result:", transcript); // Debug log
+          result.innerHTML += " " + transcript;
+          // Remove any interim element
+          const interimElement = document.querySelector(".interim");
+          if (interimElement) {
+            interimElement.remove();
+          }
+        } else {
+          console.log("Interim result:", transcript); // Debug log
+          let interimElement = document.querySelector(".interim");
+          if (!interimElement) {
+            interimElement = document.createElement("p");
+            interimElement.classList.add("interim");
+            result.appendChild(interimElement);
+          }
+          interimElement.innerHTML = transcript;
         }
-        //update the interim p with the speech result
-        document.querySelector(".interim").innerHTML = " " + speechResult;
       }
       downloadBtn.disabled = false;
+    };
+    recognition.onend = () => {
+      console.log("Recognition ended");
+      // Auto restart if not manually stopped and within restart limit
+      if (!isStoppingManually && recording && restartCount < maxRestarts) {
+        restartCount++;
+        console.log(`Attempting restart #${restartCount}`);
+        try {
+          setTimeout(() => {
+            if (recording && !isStoppingManually) {
+              recognition.start();
+            }
+          }, 100);
+        } catch (error) {
+          console.error("Failed to restart recognition:", error);
+        }
+      } else if (restartCount >= maxRestarts) {
+        alert("Recording session timed out. Please start again.");
+        stopRecording();
+      }
     };
     recognition.onspeechend = () => {
       // Only restart if we're not manually stopping
