@@ -9,6 +9,9 @@ let SpeechRecognition =
   recognition,
   recording = false;
 
+// Add this variable to track if we're manually stopping
+let isStoppingManually = false;
+
 function populateLanguages() {
   languages.forEach((lang) => {
     const option = document.createElement("option");
@@ -25,6 +28,10 @@ function speechToText() {
     recognition = new SpeechRecognition();
     recognition.lang = inputLanguage.value;
     recognition.interimResults = true;
+    // Add these configurations
+    recognition.continuous = true; // Keep recording even after silence
+    recognition.maxAlternatives = 1;
+
     recordBtn.classList.add("recording");
     recordBtn.querySelector("p").innerHTML = "Listening...";
     recognition.start();
@@ -47,28 +54,38 @@ function speechToText() {
       downloadBtn.disabled = false;
     };
     recognition.onspeechend = () => {
-      speechToText();
+      // Only restart if we're not manually stopping
+      if (!isStoppingManually) {
+        recognition.stop();
+        recognition.start();
+      }
     };
     recognition.onerror = (event) => {
-      stopRecording();
-      if (event.error === "no-speech") {
-        alert("No speech was detected. Stopping...");
-      } else if (event.error === "audio-capture") {
-        alert(
-          "No microphone was found. Ensure that a microphone is installed."
-        );
-      } else if (event.error === "not-allowed") {
-        alert("Permission to use microphone is blocked.");
-      } else if (event.error === "aborted") {
-        alert("Listening Stopped.");
-      } else {
-        alert("Error occurred in recognition: " + event.error);
+      console.log("Error occurred:", event.error); // Add this for debugging
+      
+      // Only handle error if we're not manually stopping
+      if (!isStoppingManually) {
+        if (event.error === "no-speech") {
+          // Instead of stopping, try to restart
+          recognition.stop();
+          recognition.start();
+          return;
+        } else if (event.error === "audio-capture") {
+          alert("No microphone was found. Ensure that a microphone is installed.");
+        } else if (event.error === "not-allowed") {
+          alert("Permission to use microphone is blocked. Please enable it in your browser settings.");
+        } else if (event.error === "aborted" && !isStoppingManually) {
+          // Only show alert if we didn't manually stop
+          alert("Listening Stopped.");
+        } else {
+          alert("Error occurred in recognition: " + event.error);
+        }
+        stopRecording();
       }
     };
   } catch (error) {
     recording = false;
-
-    console.log(error);
+    console.error(error);
   }
 }
 
@@ -82,10 +99,15 @@ recordBtn.addEventListener("click", () => {
 });
 
 function stopRecording() {
+  isStoppingManually = true;
   recognition.stop();
   recordBtn.querySelector("p").innerHTML = "Start Listening";
   recordBtn.classList.remove("recording");
   recording = false;
+  // Reset the flag after a short delay
+  setTimeout(() => {
+    isStoppingManually = false;
+  }, 1000);
 }
 
 function download() {
