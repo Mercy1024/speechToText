@@ -62,7 +62,7 @@ function speechToText() {
     };
     recognition.onerror = (event) => {
       console.log("Error occurred:", event.error); // Add this for debugging
-      
+
       // Only handle error if we're not manually stopping
       if (!isStoppingManually) {
         if (event.error === "no-speech") {
@@ -71,9 +71,13 @@ function speechToText() {
           recognition.start();
           return;
         } else if (event.error === "audio-capture") {
-          alert("No microphone was found. Ensure that a microphone is installed.");
+          alert(
+            "No microphone was found. Ensure that a microphone is installed."
+          );
         } else if (event.error === "not-allowed") {
-          alert("Permission to use microphone is blocked. Please enable it in your browser settings.");
+          alert(
+            "Permission to use microphone is blocked. Please enable it in your browser settings."
+          );
         } else if (event.error === "aborted" && !isStoppingManually) {
           // Only show alert if we didn't manually stop
           alert("Listening Stopped.");
