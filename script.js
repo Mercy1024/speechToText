@@ -12,6 +12,10 @@ let SpeechRecognition =
 // Add this variable to track if we're manually stopping
 let isStoppingManually = false;
 
+// Add these variables at the top with other declarations
+let restartCount = 0;
+const maxRestarts = 5;
+
 function populateLanguages() {
   languages.forEach((lang) => {
     const option = document.createElement("option");
