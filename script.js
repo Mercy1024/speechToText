@@ -16,6 +16,13 @@ let isStoppingManually = false;
 let restartCount = 0;
 const maxRestarts = 5;
 
+// Add these at the top with your other constants
+const uploadBtn = document.querySelector(".upload");
+const transcribeBtn = document.querySelector(".transcribe");
+const audioFileInput = document.getElementById("audioFileInput");
+
+let audioFile = null;
+
 function populateLanguages() {
   languages.forEach((lang) => {
     const option = document.createElement("option");
@@ -171,3 +178,100 @@ clearBtn.addEventListener("click", () => {
   result.innerHTML = "";
   downloadBtn.disabled = true;
 });
+
+// Add these new functions
+uploadBtn.addEventListener("click", () => {
+  audioFileInput.click();
+});
+
+audioFileInput.addEventListener("change", (e) => {
+  audioFile = e.target.files[0];
+  if (audioFile) {
+    transcribeBtn.disabled = false;
+    uploadBtn.querySelector("p").innerHTML = audioFile.name;
+  }
+});
+
+transcribeBtn.addEventListener("click", async () => {
+  if (!audioFile) return;
+
+  try {
+    transcribeBtn.disabled = true;
+    transcribeBtn.querySelector("p").innerHTML = "Transcribing...";
+
+    // Create audio context
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Read the file
+    const arrayBuffer = await audioFile.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    
+    // Create audio source
+    const source = audioContext.createBufferSource();
+    source.buffer = audioBuffer;
+    
+    // Create media stream destination
+    const mediaStreamDestination = audioContext.createMediaStreamDestination();
+    source.connect(mediaStreamDestination);
+    
+    // Create recognition instance
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = inputLanguage.value;
+
+    // Set up recognition handlers
+    recognition.onresult = (event) => {
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          result.innerHTML += " " + transcript;
+        }
+      }
+      downloadBtn.disabled = false;
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Recognition error:', event.error);
+      finishTranscription();
+    };
+
+    recognition.onend = () => {
+      finishTranscription();
+    };
+
+    // Start playback and recognition
+    recognition.start();
+    source.start(0);
+    
+    // Stop recognition when audio ends
+    source.onended = () => {
+      recognition.stop();
+    };
+
+  } catch (error) {
+    console.error('Transcription failed:', error);
+    alert('Failed to transcribe audio file. Please try again.');
+    finishTranscription();
+  }
+});
+
+function finishTranscription() {
+  transcribeBtn.disabled = false;
+  transcribeBtn.querySelector("p").innerHTML = "Transcribe Audio";
+}
+
+// Add some CSS styles
+const style = document.createElement('style');
+style.textContent = `
+  .upload-section {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+  }
+  
+  .upload-section .btn {
+    flex: 1;
+  }
+`;
+document.head.appendChild(style);

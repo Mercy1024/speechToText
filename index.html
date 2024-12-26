@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
     <title>Speech to Text</title>
-    <meta http-equiv="permissions-policy" content="microphone=*">
   </head>
   <body>
     <div class="container">
@@ -25,6 +24,21 @@
         </div>
         <p>Start Listening</p>
       </button>
+      <div class="upload-section">
+        <input type="file" id="audioFileInput" accept="audio/*" style="display: none;" />
+        <button class="btn upload">
+          <div class="icon">
+            <ion-icon name="cloud-upload-outline"></ion-icon>
+          </div>
+          <p>Upload Audio</p>
+        </button>
+        <button class="btn transcribe" disabled>
+          <div class="icon">
+            <ion-icon name="text-outline"></ion-icon>
+          </div>
+          <p>Transcribe Audio</p>
+        </button>
+      </div>
       <p class="heading">Result :</p>
       <div
         class="result"

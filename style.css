@@ -113,3 +113,30 @@ body {
   display: flex;
   gap: 20px;
 }
+.upload-section {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.upload-section .btn {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.upload-section .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.upload-section .btn:hover:not(:disabled) {
+  background: #f0f0f0;
+}
